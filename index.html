@@ -1,1 +1,819 @@
+<!DOCTYPE html>
 
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HAIR MATCH — 似合う髪型診断</title>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;700&family=Bebas+Neue&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #F5F0E8;
+    --warm-white: #FAF7F2;
+    --ink: #1A1208;
+    --gold: #C9A84C;
+    --gold-light: #E8D5A3;
+    --terracotta: #C4654A;
+    --sage: #7A8C6E;
+    --dusty-rose: #D4A5A0;
+    --shadow: rgba(26, 18, 8, 0.12);
+  }
+
+- { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+background: var(–cream);
+color: var(–ink);
+font-family: ‘Noto Sans JP’, sans-serif;
+min-height: 100vh;
+overflow-x: hidden;
+}
+
+/* Grain overlay */
+body::before {
+content: ‘’;
+position: fixed;
+inset: 0;
+background-image: url(“data:image/svg+xml,%3Csvg viewBox=‘0 0 256 256’ xmlns=‘http://www.w3.org/2000/svg’%3E%3Cfilter id=‘noise’%3E%3CfeTurbulence type=‘fractalNoise’ baseFrequency=‘0.9’ numOctaves=‘4’ stitchTiles=‘stitch’/%3E%3C/filter%3E%3Crect width=‘100%25’ height=‘100%25’ filter=‘url(%23noise)’ opacity=‘0.04’/%3E%3C/svg%3E”);
+pointer-events: none;
+z-index: 999;
+opacity: 0.4;
+}
+
+/* Header */
+header {
+padding: 32px 48px 24px;
+display: flex;
+align-items: baseline;
+gap: 16px;
+border-bottom: 1px solid rgba(201, 168, 76, 0.3);
+position: relative;
+}
+
+.logo {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 48px;
+letter-spacing: 6px;
+color: var(–ink);
+line-height: 1;
+}
+
+.logo span {
+color: var(–gold);
+}
+
+.tagline {
+font-family: ‘Shippori Mincho’, serif;
+font-size: 13px;
+color: var(–gold);
+letter-spacing: 3px;
+}
+
+.header-deco {
+position: absolute;
+right: 48px;
+top: 50%;
+transform: translateY(-50%);
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 11px;
+letter-spacing: 4px;
+color: rgba(26,18,8,0.2);
+}
+
+/* Main Layout */
+.main-container {
+display: grid;
+grid-template-columns: 1fr 1fr;
+min-height: calc(100vh - 97px);
+}
+
+/* Left Panel */
+.left-panel {
+padding: 48px;
+border-right: 1px solid rgba(201, 168, 76, 0.2);
+display: flex;
+flex-direction: column;
+gap: 32px;
+}
+
+.section-label {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 11px;
+letter-spacing: 5px;
+color: var(–gold);
+margin-bottom: 12px;
+}
+
+/* Upload Area */
+.upload-zone {
+border: 1.5px dashed rgba(201, 168, 76, 0.5);
+border-radius: 2px;
+padding: 40px;
+text-align: center;
+cursor: pointer;
+transition: all 0.3s ease;
+background: rgba(201, 168, 76, 0.03);
+position: relative;
+overflow: hidden;
+}
+
+.upload-zone:hover {
+border-color: var(–gold);
+background: rgba(201, 168, 76, 0.06);
+}
+
+.upload-zone.drag-over {
+border-color: var(–gold);
+background: rgba(201, 168, 76, 0.1);
+transform: scale(1.01);
+}
+
+.upload-zone.has-image {
+border-style: solid;
+border-color: var(–gold);
+padding: 0;
+}
+
+.upload-icon {
+width: 48px;
+height: 48px;
+margin: 0 auto 16px;
+color: var(–gold);
+}
+
+.upload-text-main {
+font-family: ‘Shippori Mincho’, serif;
+font-size: 18px;
+font-weight: 600;
+color: var(–ink);
+margin-bottom: 6px;
+}
+
+.upload-text-sub {
+font-size: 12px;
+color: rgba(26,18,8,0.4);
+letter-spacing: 1px;
+}
+
+#fileInput { display: none; }
+
+#previewImg {
+width: 100%;
+max-height: 320px;
+object-fit: cover;
+display: none;
+border-radius: 2px;
+}
+
+/* Question Sections */
+.questions-grid {
+display: grid;
+gap: 28px;
+}
+
+.question-block label {
+display: block;
+font-family: ‘Shippori Mincho’, serif;
+font-size: 15px;
+font-weight: 600;
+color: var(–ink);
+margin-bottom: 14px;
+}
+
+.options-row {
+display: flex;
+flex-wrap: wrap;
+gap: 8px;
+}
+
+.option-chip {
+padding: 8px 16px;
+border: 1px solid rgba(26,18,8,0.15);
+border-radius: 100px;
+font-size: 13px;
+cursor: pointer;
+transition: all 0.2s ease;
+background: transparent;
+color: var(–ink);
+font-family: ‘Noto Sans JP’, sans-serif;
+letter-spacing: 0.5px;
+}
+
+.option-chip:hover {
+border-color: var(–gold);
+color: var(–gold);
+}
+
+.option-chip.selected {
+background: var(–ink);
+border-color: var(–ink);
+color: var(–cream);
+}
+
+/* Diagnose Button */
+.diagnose-btn {
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 12px;
+width: 100%;
+padding: 18px;
+background: var(–ink);
+color: var(–cream);
+border: none;
+cursor: pointer;
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 20px;
+letter-spacing: 6px;
+transition: all 0.3s ease;
+position: relative;
+overflow: hidden;
+}
+
+.diagnose-btn::before {
+content: ‘’;
+position: absolute;
+inset: 0;
+background: var(–gold);
+transform: translateX(-100%);
+transition: transform 0.4s ease;
+}
+
+.diagnose-btn:hover::before {
+transform: translateX(0);
+}
+
+.diagnose-btn span { position: relative; z-index: 1; }
+.diagnose-btn:hover { color: var(–ink); }
+
+.diagnose-btn:disabled {
+opacity: 0.4;
+cursor: not-allowed;
+}
+
+.diagnose-btn:disabled::before { display: none; }
+
+/* Right Panel */
+.right-panel {
+padding: 48px;
+display: flex;
+flex-direction: column;
+}
+
+.results-placeholder {
+flex: 1;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+text-align: center;
+gap: 20px;
+}
+
+.placeholder-deco {
+width: 120px;
+height: 120px;
+border: 1px solid rgba(201, 168, 76, 0.3);
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+position: relative;
+}
+
+.placeholder-deco::before {
+content: ‘’;
+position: absolute;
+inset: 8px;
+border: 1px solid rgba(201, 168, 76, 0.15);
+border-radius: 50%;
+}
+
+.placeholder-deco svg {
+color: rgba(201, 168, 76, 0.4);
+}
+
+.placeholder-text {
+font-family: ‘Shippori Mincho’, serif;
+font-size: 16px;
+color: rgba(26,18,8,0.35);
+line-height: 1.8;
+}
+
+/* Loading State */
+.loading-state {
+flex: 1;
+display: none;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+gap: 24px;
+}
+
+.loading-ring {
+width: 64px;
+height: 64px;
+border: 2px solid rgba(201, 168, 76, 0.2);
+border-top-color: var(–gold);
+border-radius: 50%;
+animation: spin 1s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-text {
+font-family: ‘Shippori Mincho’, serif;
+font-size: 14px;
+color: var(–gold);
+letter-spacing: 3px;
+animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+/* Results */
+.results-container {
+display: none;
+flex-direction: column;
+gap: 28px;
+animation: fadeUp 0.6s ease forwards;
+}
+
+@keyframes fadeUp {
+from { opacity: 0; transform: translateY(20px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+.results-header {
+padding-bottom: 20px;
+border-bottom: 1px solid rgba(201, 168, 76, 0.2);
+}
+
+.face-type-badge {
+display: inline-block;
+background: var(–gold);
+color: var(–ink);
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 12px;
+letter-spacing: 4px;
+padding: 4px 12px;
+margin-bottom: 12px;
+}
+
+.face-type-name {
+font-family: ‘Shippori Mincho’, serif;
+font-size: 28px;
+font-weight: 700;
+line-height: 1.2;
+margin-bottom: 10px;
+}
+
+.face-type-desc {
+font-size: 13px;
+line-height: 1.9;
+color: rgba(26,18,8,0.65);
+}
+
+/* Hairstyle Cards */
+.hairstyles-title {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 13px;
+letter-spacing: 5px;
+color: var(–gold);
+}
+
+.hairstyle-cards {
+display: grid;
+gap: 16px;
+}
+
+.hairstyle-card {
+display: grid;
+grid-template-columns: auto 1fr;
+gap: 16px;
+padding: 18px;
+background: var(–warm-white);
+border: 1px solid rgba(26,18,8,0.06);
+border-radius: 2px;
+transition: all 0.3s ease;
+animation: fadeUp 0.4s ease forwards;
+opacity: 0;
+}
+
+.hairstyle-card:nth-child(1) { animation-delay: 0.1s; }
+.hairstyle-card:nth-child(2) { animation-delay: 0.2s; }
+.hairstyle-card:nth-child(3) { animation-delay: 0.3s; }
+
+.hairstyle-card:hover {
+border-color: var(–gold-light);
+box-shadow: 0 4px 24px var(–shadow);
+transform: translateY(-2px);
+}
+
+.card-rank {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 40px;
+color: var(–gold-light);
+line-height: 1;
+width: 32px;
+text-align: center;
+}
+
+.card-body {}
+
+.card-name {
+font-family: ‘Shippori Mincho’, serif;
+font-size: 16px;
+font-weight: 600;
+margin-bottom: 6px;
+}
+
+.card-reason {
+font-size: 12px;
+line-height: 1.8;
+color: rgba(26,18,8,0.6);
+}
+
+.card-tags {
+display: flex;
+flex-wrap: wrap;
+gap: 6px;
+margin-top: 10px;
+}
+
+.card-tag {
+font-size: 10px;
+padding: 3px 10px;
+background: rgba(201, 168, 76, 0.12);
+color: var(–gold);
+border-radius: 100px;
+letter-spacing: 0.5px;
+}
+
+/* Tips Section */
+.tips-section {
+padding: 20px;
+background: rgba(196, 101, 74, 0.06);
+border-left: 2px solid var(–terracotta);
+border-radius: 0 2px 2px 0;
+}
+
+.tips-label {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 11px;
+letter-spacing: 4px;
+color: var(–terracotta);
+margin-bottom: 10px;
+}
+
+.tips-text {
+font-size: 12px;
+line-height: 2;
+color: rgba(26,18,8,0.65);
+}
+
+/* Error */
+.error-msg {
+display: none;
+padding: 16px;
+background: rgba(196, 101, 74, 0.08);
+border: 1px solid rgba(196, 101, 74, 0.3);
+border-radius: 2px;
+font-size: 13px;
+color: var(–terracotta);
+text-align: center;
+}
+
+/* Divider */
+.gold-line {
+height: 1px;
+background: linear-gradient(90deg, transparent, var(–gold), transparent);
+margin: 4px 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+.main-container { grid-template-columns: 1fr; }
+.left-panel, .right-panel { padding: 28px 20px; }
+.left-panel { border-right: none; border-bottom: 1px solid rgba(201, 168, 76, 0.2); }
+header { padding: 20px; }
+.logo { font-size: 36px; }
+.header-deco { display: none; }
+}
+</style>
+
+</head>
+<body>
+
+<header>
+  <div class="logo">HAIR<span>MATCH</span></div>
+  <div class="tagline">似合う髪型診断</div>
+  <div class="header-deco">AI POWERED STYLING</div>
+</header>
+
+<div class="main-container">
+  <!-- LEFT: Input -->
+  <div class="left-panel">
+
+```
+<!-- Upload -->
+<div>
+  <div class="section-label">01 — 写真をアップロード（任意）</div>
+  <div class="upload-zone" id="uploadZone">
+    <img id="previewImg" alt="プレビュー">
+    <div id="uploadPlaceholder">
+      <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.338-2.32 5.75 5.75 0 011.323 7.595A4.5 4.5 0 0117.25 19.5H6.75z"/>
+      </svg>
+      <div class="upload-text-main">写真をドラッグ＆ドロップ</div>
+      <div class="upload-text-sub">または クリックして選択 · JPG, PNG</div>
+    </div>
+  </div>
+  <input type="file" id="fileInput" accept="image/*">
+</div>
+
+<!-- Questions -->
+<div class="questions-grid">
+  <div class="section-label" style="margin-bottom: 0;">02 — あなたについて教えてください</div>
+
+  <div class="question-block">
+    <label>顔の形は？</label>
+    <div class="options-row" data-name="faceShape">
+      <button class="option-chip" data-value="oval">面長・卵型</button>
+      <button class="option-chip" data-value="round">丸型</button>
+      <button class="option-chip" data-value="square">四角型</button>
+      <button class="option-chip" data-value="heart">ハート型</button>
+      <button class="option-chip" data-value="unknown">わからない</button>
+    </div>
+  </div>
+
+  <div class="question-block">
+    <label>髪質は？</label>
+    <div class="options-row" data-name="hairTexture">
+      <button class="option-chip" data-value="straight">直毛・硬め</button>
+      <button class="option-chip" data-value="wavy">ウェーブ</button>
+      <button class="option-chip" data-value="curly">くせ毛・天パ</button>
+      <button class="option-chip" data-value="fine">柔らかい・細い</button>
+    </div>
+  </div>
+
+  <div class="question-block">
+    <label>希望の雰囲気は？</label>
+    <div class="options-row" data-name="vibe">
+      <button class="option-chip" data-value="feminine">フェミニン</button>
+      <button class="option-chip" data-value="cool">クール</button>
+      <button class="option-chip" data-value="natural">ナチュラル</button>
+      <button class="option-chip" data-value="cute">かわいい</button>
+      <button class="option-chip" data-value="edgy">個性的</button>
+    </div>
+  </div>
+
+  <div class="question-block">
+    <label>希望の長さは？</label>
+    <div class="options-row" data-name="length">
+      <button class="option-chip" data-value="short">ショート</button>
+      <button class="option-chip" data-value="medium">ミディアム</button>
+      <button class="option-chip" data-value="long">ロング</button>
+      <button class="option-chip" data-value="any">おまかせ</button>
+    </div>
+  </div>
+
+  <div class="question-block">
+    <label>生活スタイルは？</label>
+    <div class="options-row" data-name="lifestyle">
+      <button class="option-chip" data-value="office">オフィス</button>
+      <button class="option-chip" data-value="casual">カジュアル</button>
+      <button class="option-chip" data-value="active">アクティブ</button>
+      <button class="option-chip" data-value="creative">クリエイティブ</button>
+    </div>
+  </div>
+</div>
+
+<button class="diagnose-btn" id="diagnoseBtn" disabled>
+  <span>診断する</span>
+</button>
+```
+
+  </div>
+
+  <!-- RIGHT: Results -->
+
+  <div class="right-panel">
+
+```
+<div class="results-placeholder" id="placeholder">
+  <div class="placeholder-deco">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+      <path d="M12 6v6l4 2"/>
+    </svg>
+  </div>
+  <div class="placeholder-text">
+    左の項目を選択して<br>
+    「診断する」を押してください<br>
+    <span style="font-size: 11px; opacity: 0.6; letter-spacing: 2px;">AI があなたに似合う髪型を提案します</span>
+  </div>
+</div>
+
+<div class="loading-state" id="loadingState">
+  <div class="loading-ring"></div>
+  <div class="loading-text">分析中...</div>
+</div>
+
+<div class="results-container" id="resultsContainer"></div>
+<div class="error-msg" id="errorMsg"></div>
+```
+
+  </div>
+</div>
+
+<script>
+const selections = {};
+let uploadedImageBase64 = null;
+
+// Chip selection
+document.querySelectorAll('.options-row').forEach(row => {
+  row.querySelectorAll('.option-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      row.querySelectorAll('.option-chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      selections[row.dataset.name] = chip.dataset.value;
+      updateDiagnoseBtn();
+    });
+  });
+});
+
+function updateDiagnoseBtn() {
+  const required = ['faceShape', 'hairTexture', 'vibe', 'length', 'lifestyle'];
+  const allSelected = required.every(k => selections[k]);
+  document.getElementById('diagnoseBtn').disabled = !allSelected;
+}
+
+// Upload
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('fileInput');
+const previewImg = document.getElementById('previewImg');
+const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+
+uploadZone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', handleFile);
+
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('drag-over');
+  if (e.dataTransfer.files[0]) {
+    fileInput.files = e.dataTransfer.files;
+    handleFile();
+  }
+});
+
+function handleFile() {
+  const file = fileInput.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    uploadedImageBase64 = e.target.result.split(',')[1];
+    previewImg.src = e.target.result;
+    previewImg.style.display = 'block';
+    uploadPlaceholder.style.display = 'none';
+    uploadZone.classList.add('has-image');
+  };
+  reader.readAsDataURL(file);
+}
+
+// Diagnose
+document.getElementById('diagnoseBtn').addEventListener('click', async () => {
+  const placeholder = document.getElementById('placeholder');
+  const loadingState = document.getElementById('loadingState');
+  const resultsContainer = document.getElementById('resultsContainer');
+  const errorMsg = document.getElementById('errorMsg');
+
+  placeholder.style.display = 'none';
+  loadingState.style.display = 'flex';
+  resultsContainer.style.display = 'none';
+  errorMsg.style.display = 'none';
+
+  const faceShapeMap = { oval: '面長・卵型', round: '丸型', square: '四角型', heart: 'ハート型', unknown: 'わからない' };
+  const textureMap = { straight: '直毛・硬め', wavy: 'ウェーブ', curly: 'くせ毛・天パ', fine: '柔らかい・細い' };
+  const vibeMap = { feminine: 'フェミニン', cool: 'クール', natural: 'ナチュラル', cute: 'かわいい', edgy: '個性的' };
+  const lengthMap = { short: 'ショート', medium: 'ミディアム', long: 'ロング', any: 'おまかせ' };
+  const lifestyleMap = { office: 'オフィス', casual: 'カジュアル', active: 'アクティブ', creative: 'クリエイティブ' };
+
+  const userInfo = `
+顔の形: ${faceShapeMap[selections.faceShape]}
+髪質: ${textureMap[selections.hairTexture]}
+希望の雰囲気: ${vibeMap[selections.vibe]}
+希望の長さ: ${lengthMap[selections.length]}
+生活スタイル: ${lifestyleMap[selections.lifestyle]}
+  `.trim();
+
+  const prompt = `あなたはプロのヘアスタイリストです。以下のユーザー情報をもとに、似合う髪型を診断してください。
+
+ユーザー情報:
+${userInfo}
+${uploadedImageBase64 ? '（顔写真も提供されています。写真の特徴も考慮してください）' : ''}
+
+以下のJSON形式のみで回答してください（```json などのマークダウンは不要）：
+
+{
+  "faceTypeName": "顔の形の名称と特徴（例: 「黄金バランスの卵型」）",
+  "faceTypeDescription": "その顔型の特徴と似合う髪型の方向性（80〜120文字）",
+  "hairstyles": [
+    {
+      "rank": 1,
+      "name": "髪型名（日本語）",
+      "reason": "なぜ似合うかの理由（50〜80文字）",
+      "tags": ["タグ1", "タグ2", "タグ3"]
+    },
+    {
+      "rank": 2,
+      "name": "髪型名（日本語）",
+      "reason": "なぜ似合うかの理由（50〜80文字）",
+      "tags": ["タグ1", "タグ2", "タグ3"]
+    },
+    {
+      "rank": 3,
+      "name": "髪型名（日本語）",
+      "reason": "なぜ似合うかの理由（50〜80文字）",
+      "tags": ["タグ1", "タグ2", "タグ3"]
+    }
+  ],
+  "stylingTips": "ヘアケアやスタイリングのワンポイントアドバイス（60〜100文字）"
+}`;
+
+  try {
+    const messages = uploadedImageBase64
+      ? [{ role: 'user', content: [
+          { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: uploadedImageBase64 } },
+          { type: 'text', text: prompt }
+        ]}]
+      : [{ role: 'user', content: prompt }];
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages
+      })
+    });
+
+    const data = await res.json();
+    const text = data.content.map(i => i.text || '').join('').replace(/```json|```/g, '').trim();
+    const result = JSON.parse(text);
+
+    renderResults(result);
+
+    loadingState.style.display = 'none';
+    resultsContainer.style.display = 'flex';
+
+  } catch (e) {
+    loadingState.style.display = 'none';
+    errorMsg.textContent = '診断中にエラーが発生しました。もう一度お試しください。';
+    errorMsg.style.display = 'block';
+    console.error(e);
+  }
+});
+
+function renderResults(r) {
+  const container = document.getElementById('resultsContainer');
+
+  container.innerHTML = `
+    <div class="results-header">
+      <div class="face-type-badge">あなたの顔型</div>
+      <div class="face-type-name">${r.faceTypeName}</div>
+      <div class="face-type-desc">${r.faceTypeDescription}</div>
+    </div>
+
+    <div class="gold-line"></div>
+
+    <div class="hairstyles-title">おすすめヘアスタイル TOP 3</div>
+
+    <div class="hairstyle-cards">
+      ${r.hairstyles.map(s => `
+        <div class="hairstyle-card">
+          <div class="card-rank">0${s.rank}</div>
+          <div class="card-body">
+            <div class="card-name">${s.name}</div>
+            <div class="card-reason">${s.reason}</div>
+            <div class="card-tags">
+              ${s.tags.map(t => `<span class="card-tag">${t}</span>`).join('')}
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="tips-section">
+      <div class="tips-label">Styling Tips</div>
+      <div class="tips-text">${r.stylingTips}</div>
+    </div>
+  `;
+}
+</script>
+
+</body>
+</html>
