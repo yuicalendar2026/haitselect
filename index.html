@@ -33,7 +33,7 @@ overflow-x: hidden;
 body::before {
 content: ‘’;
 position: fixed;
-inset: 0;
+top: 0; left: 0; right: 0; bottom: 0;
 background-image: url(“data:image/svg+xml,%3Csvg viewBox=‘0 0 256 256’ xmlns=‘http://www.w3.org/2000/svg’%3E%3Cfilter id=‘noise’%3E%3CfeTurbulence type=‘fractalNoise’ baseFrequency=‘0.9’ numOctaves=‘4’ stitchTiles=‘stitch’/%3E%3C/filter%3E%3Crect width=‘100%25’ height=‘100%25’ filter=‘url(%23noise)’ opacity=‘0.04’/%3E%3C/svg%3E”);
 pointer-events: none;
 z-index: 999;
@@ -632,10 +632,10 @@ const selections = {};
 let uploadedImageBase64 = null;
 
 // Chip selection
-document.querySelectorAll('.options-row').forEach(row => {
-  row.querySelectorAll('.option-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      row.querySelectorAll('.option-chip').forEach(c => c.classList.remove('selected'));
+document.querySelectorAll('.options-row').forEach(function(row) {
+  row.querySelectorAll('.option-chip').forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      row.querySelectorAll('.option-chip').forEach(function(c) { c.classList.remove('selected'); });
       chip.classList.add('selected');
       selections[row.dataset.name] = chip.dataset.value;
       updateDiagnoseBtn();
@@ -644,8 +644,8 @@ document.querySelectorAll('.options-row').forEach(row => {
 });
 
 function updateDiagnoseBtn() {
-  const required = ['faceShape', 'hairTexture', 'vibe', 'length', 'lifestyle'];
-  const allSelected = required.every(k => selections[k]);
+  var required = ['faceShape', 'hairTexture', 'vibe', 'length', 'lifestyle'];
+  var allSelected = required.every(function(k) { return selections[k]; });
   document.getElementById('diagnoseBtn').disabled = !allSelected;
 }
 
@@ -655,27 +655,27 @@ const fileInput = document.getElementById('fileInput');
 const previewImg = document.getElementById('previewImg');
 const uploadPlaceholder = document.getElementById('uploadPlaceholder');
 
-uploadZone.addEventListener('click', () => fileInput.click());
+uploadZone.addEventListener('click', function() { fileInput.click(); });
 fileInput.addEventListener('change', handleFile);
 
-uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
-uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
-uploadZone.addEventListener('drop', e => {
+uploadZone.addEventListener('dragover', function(e) { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+uploadZone.addEventListener('dragleave', function() { uploadZone.classList.remove('drag-over'); });
+uploadZone.addEventListener('drop', function(e) {
   e.preventDefault();
   uploadZone.classList.remove('drag-over');
-  if (e.dataTransfer.files[0]) {
-    fileInput.files = e.dataTransfer.files;
-    handleFile();
-  }
+  var files = e.dataTransfer && e.dataTransfer.files;
+  if (files && files[0]) { readFile(files[0]); }
 });
 
 function handleFile() {
-  const file = fileInput.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    uploadedImageBase64 = e.target.result.split(',')[1];
-    previewImg.src = e.target.result;
+  if (fileInput.files && fileInput.files[0]) { readFile(fileInput.files[0]); }
+}
+
+function readFile(file) {
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    uploadedImageBase64 = ev.target.result.split(',')[1];
+    previewImg.src = ev.target.result;
     previewImg.style.display = 'block';
     uploadPlaceholder.style.display = 'none';
     uploadZone.classList.add('has-image');
@@ -684,134 +684,106 @@ function handleFile() {
 }
 
 // Diagnose
-document.getElementById('diagnoseBtn').addEventListener('click', async () => {
-  const placeholder = document.getElementById('placeholder');
-  const loadingState = document.getElementById('loadingState');
-  const resultsContainer = document.getElementById('resultsContainer');
-  const errorMsg = document.getElementById('errorMsg');
+document.getElementById('diagnoseBtn').addEventListener('click', function() {
+  var placeholder = document.getElementById('placeholder');
+  var loadingState = document.getElementById('loadingState');
+  var resultsContainer = document.getElementById('resultsContainer');
+  var errorMsg = document.getElementById('errorMsg');
 
   placeholder.style.display = 'none';
   loadingState.style.display = 'flex';
   resultsContainer.style.display = 'none';
   errorMsg.style.display = 'none';
 
-  const faceShapeMap = { oval: '面長・卵型', round: '丸型', square: '四角型', heart: 'ハート型', unknown: 'わからない' };
-  const textureMap = { straight: '直毛・硬め', wavy: 'ウェーブ', curly: 'くせ毛・天パ', fine: '柔らかい・細い' };
-  const vibeMap = { feminine: 'フェミニン', cool: 'クール', natural: 'ナチュラル', cute: 'かわいい', edgy: '個性的' };
-  const lengthMap = { short: 'ショート', medium: 'ミディアム', long: 'ロング', any: 'おまかせ' };
-  const lifestyleMap = { office: 'オフィス', casual: 'カジュアル', active: 'アクティブ', creative: 'クリエイティブ' };
+  var faceShapeMap = { oval: '面長・卵型', round: '丸型', square: '四角型', heart: 'ハート型', unknown: 'わからない' };
+  var textureMap = { straight: '直毛・硬め', wavy: 'ウェーブ', curly: 'くせ毛・天パ', fine: '柔らかい・細い' };
+  var vibeMap = { feminine: 'フェミニン', cool: 'クール', natural: 'ナチュラル', cute: 'かわいい', edgy: '個性的' };
+  var lengthMap = { short: 'ショート', medium: 'ミディアム', long: 'ロング', any: 'おまかせ' };
+  var lifestyleMap = { office: 'オフィス', casual: 'カジュアル', active: 'アクティブ', creative: 'クリエイティブ' };
 
-  const userInfo = `
-顔の形: ${faceShapeMap[selections.faceShape]}
-髪質: ${textureMap[selections.hairTexture]}
-希望の雰囲気: ${vibeMap[selections.vibe]}
-希望の長さ: ${lengthMap[selections.length]}
-生活スタイル: ${lifestyleMap[selections.lifestyle]}
-  `.trim();
+  var userInfo = [
+    '顔の形: ' + faceShapeMap[selections.faceShape],
+    '髪質: ' + textureMap[selections.hairTexture],
+    '希望の雰囲気: ' + vibeMap[selections.vibe],
+    '希望の長さ: ' + lengthMap[selections.length],
+    '生活スタイル: ' + lifestyleMap[selections.lifestyle]
+  ].join('\n');
 
-  const prompt = `あなたはプロのヘアスタイリストです。以下のユーザー情報をもとに、似合う髪型を診断してください。
+  var prompt = 'あなたはプロのヘアスタイリストです。以下のユーザー情報をもとに、似合う髪型を診断してください。\n\nユーザー情報:\n' + userInfo + '\n' +
+    (uploadedImageBase64 ? '（顔写真も提供されています。写真の特徴も考慮してください）\n' : '') +
+    '\n以下のJSON形式のみで回答してください（```json などのマークダウンは不要）：\n\n' +
+    '{\n  "faceTypeName": "顔の形の名称と特徴（例: 「黄金バランスの卵型」）",\n' +
+    '  "faceTypeDescription": "その顔型の特徴と似合う髪型の方向性（80〜120文字）",\n' +
+    '  "hairstyles": [\n' +
+    '    { "rank": 1, "name": "髪型名（日本語）", "reason": "なぜ似合うかの理由（50〜80文字）", "tags": ["タグ1", "タグ2", "タグ3"] },\n' +
+    '    { "rank": 2, "name": "髪型名（日本語）", "reason": "なぜ似合うかの理由（50〜80文字）", "tags": ["タグ1", "タグ2", "タグ3"] },\n' +
+    '    { "rank": 3, "name": "髪型名（日本語）", "reason": "なぜ似合うかの理由（50〜80文字）", "tags": ["タグ1", "タグ2", "タグ3"] }\n' +
+    '  ],\n  "stylingTips": "ヘアケアやスタイリングのワンポイントアドバイス（60〜100文字）"\n}';
 
-ユーザー情報:
-${userInfo}
-${uploadedImageBase64 ? '（顔写真も提供されています。写真の特徴も考慮してください）' : ''}
+  var contentArr;
+  if (uploadedImageBase64) {
+    contentArr = [
+      { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: uploadedImageBase64 } },
+      { type: 'text', text: prompt }
+    ];
+  } else {
+    contentArr = prompt;
+  }
 
-以下のJSON形式のみで回答してください（```json などのマークダウンは不要）：
+  var body = JSON.stringify({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 1000,
+    messages: [{ role: 'user', content: contentArr }]
+  });
 
-{
-  "faceTypeName": "顔の形の名称と特徴（例: 「黄金バランスの卵型」）",
-  "faceTypeDescription": "その顔型の特徴と似合う髪型の方向性（80〜120文字）",
-  "hairstyles": [
-    {
-      "rank": 1,
-      "name": "髪型名（日本語）",
-      "reason": "なぜ似合うかの理由（50〜80文字）",
-      "tags": ["タグ1", "タグ2", "タグ3"]
-    },
-    {
-      "rank": 2,
-      "name": "髪型名（日本語）",
-      "reason": "なぜ似合うかの理由（50〜80文字）",
-      "tags": ["タグ1", "タグ2", "タグ3"]
-    },
-    {
-      "rank": 3,
-      "name": "髪型名（日本語）",
-      "reason": "なぜ似合うかの理由（50〜80文字）",
-      "tags": ["タグ1", "タグ2", "タグ3"]
-    }
-  ],
-  "stylingTips": "ヘアケアやスタイリングのワンポイントアドバイス（60〜100文字）"
-}`;
-
-  try {
-    const messages = uploadedImageBase64
-      ? [{ role: 'user', content: [
-          { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: uploadedImageBase64 } },
-          { type: 'text', text: prompt }
-        ]}]
-      : [{ role: 'user', content: prompt }];
-
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages
-      })
-    });
-
-    const data = await res.json();
-    const text = data.content.map(i => i.text || '').join('').replace(/```json|```/g, '').trim();
-    const result = JSON.parse(text);
-
+  fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: body
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    var text = data.content.map(function(i) { return i.text || ''; }).join('').replace(/```json|```/g, '').trim();
+    var result = JSON.parse(text);
     renderResults(result);
-
     loadingState.style.display = 'none';
     resultsContainer.style.display = 'flex';
-
-  } catch (e) {
+  })
+  .catch(function(e) {
     loadingState.style.display = 'none';
     errorMsg.textContent = '診断中にエラーが発生しました。もう一度お試しください。';
     errorMsg.style.display = 'block';
     console.error(e);
-  }
+  });
 });
 
 function renderResults(r) {
-  const container = document.getElementById('resultsContainer');
+  var container = document.getElementById('resultsContainer');
 
-  container.innerHTML = `
-    <div class="results-header">
-      <div class="face-type-badge">あなたの顔型</div>
-      <div class="face-type-name">${r.faceTypeName}</div>
-      <div class="face-type-desc">${r.faceTypeDescription}</div>
-    </div>
+  var cardsHtml = r.hairstyles.map(function(s) {
+    var tagsHtml = s.tags.map(function(t) { return '<span class="card-tag">' + t + '</span>'; }).join('');
+    return '<div class="hairstyle-card">' +
+      '<div class="card-rank">0' + s.rank + '</div>' +
+      '<div class="card-body">' +
+        '<div class="card-name">' + s.name + '</div>' +
+        '<div class="card-reason">' + s.reason + '</div>' +
+        '<div class="card-tags">' + tagsHtml + '</div>' +
+      '</div></div>';
+  }).join('');
 
-    <div class="gold-line"></div>
-
-    <div class="hairstyles-title">おすすめヘアスタイル TOP 3</div>
-
-    <div class="hairstyle-cards">
-      ${r.hairstyles.map(s => `
-        <div class="hairstyle-card">
-          <div class="card-rank">0${s.rank}</div>
-          <div class="card-body">
-            <div class="card-name">${s.name}</div>
-            <div class="card-reason">${s.reason}</div>
-            <div class="card-tags">
-              ${s.tags.map(t => `<span class="card-tag">${t}</span>`).join('')}
-            </div>
-          </div>
-        </div>
-      `).join('')}
-    </div>
-
-    <div class="tips-section">
-      <div class="tips-label">Styling Tips</div>
-      <div class="tips-text">${r.stylingTips}</div>
-    </div>
-  `;
+  container.innerHTML =
+    '<div class="results-header">' +
+      '<div class="face-type-badge">あなたの顔型</div>' +
+      '<div class="face-type-name">' + r.faceTypeName + '</div>' +
+      '<div class="face-type-desc">' + r.faceTypeDescription + '</div>' +
+    '</div>' +
+    '<div class="gold-line"></div>' +
+    '<div class="hairstyles-title">おすすめヘアスタイル TOP 3</div>' +
+    '<div class="hairstyle-cards">' + cardsHtml + '</div>' +
+    '<div class="tips-section">' +
+      '<div class="tips-label">Styling Tips</div>' +
+      '<div class="tips-text">' + r.stylingTips + '</div>' +
+    '</div>';
 }
 </script>
 
